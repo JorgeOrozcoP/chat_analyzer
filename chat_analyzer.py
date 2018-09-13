@@ -4,16 +4,10 @@ import re
 
 
 def analyze_chat(chat_record):
-    chat = []
-    with open(chat_record, "r", encoding="utf8") as file:        
-        for idx, ln in enumerate(file):
-            corr_line = unidecode.unidecode(ln).replace('\n',' ')
-            if ln.startswith("["):
-                chat.append(corr_line)
-            else:
-                chat[len(chat)-1]+=corr_line
-                
-    df = pd.DataFrame(chat)
+
+    formatted_chat = leer_chat(chat_record)
+
+    df = pd.DataFrame(formatted_chat)
     df.columns = ['mensaje']
                 
     df['fecha']=df['mensaje'].str.extract('(\d\d/\d\d/\d\d)', expand=True)
@@ -37,6 +31,16 @@ def analyze_chat(chat_record):
     
     df.to_csv('output.csv',index=False)
 
+def leer_chat(chat_record):
+    chat = []
+    with open(chat_record, "r", encoding="utf8") as file:
+        for idx, ln in enumerate(file):
+            corr_line = unidecode.unidecode(ln).replace('\n',' ')
+            if corr_line.startswith("["):
+                chat.append(corr_line)
+            else:
+                chat[len(chat)-1]+=corr_line
+    return chat
 
 def crear_regex(list_file, separador):
     words=[]
