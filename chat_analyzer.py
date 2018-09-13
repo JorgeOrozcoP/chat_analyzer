@@ -44,12 +44,15 @@ def leer_chat(chat_record):
                 chat[len(chat)-1]+=corr_line
     return chat
 
-#TODO: adaptar espacios en listas de palabras
 def crear_regex(list_file, separador):
     words=[]
     with open(list_file, "r") as file:        
         for idx, ln in enumerate(file):
-            words.append(ln.replace('\n',''))
+            to_append = ln.lstrip()
+            to_append = to_append.rstrip()
+            to_append = to_append.replace('\n','')
+            to_append = to_append.replace(' ', '\s')
+            words.append(to_append)
 
     new_list = [x+separador for x in words]
     
