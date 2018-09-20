@@ -48,7 +48,8 @@ def analyze_chat(chat_record, output_folder):
 
     # formato DF
     print('Ordenando resultados...')
-    processed_chat = processed_chat.sort_values(['fecha', 'hora'])
+    processed_chat['fecha'] = pd.to_datetime(processed_chat['fecha'], format='%d/%m/%y')
+    processed_chat = processed_chat.sort_values(['fecha', 'hora'], ascending=False)
 
     del processed_chat['mensaje']
 
@@ -133,6 +134,5 @@ def crear_regex(list_file, separador):
 if __name__ == "__main__":
     # analyze_chat('_chat.txt')
     # analyze_mult_chats('../fuente', '../reportes')
-    # analyze_mult_chats(sys.argv[1], sys.argv[2])
-    analyze_mult_chats('./fuente', './reportes')
+    analyze_mult_chats(sys.argv[1], sys.argv[2])
     print('Reporte terminado')
