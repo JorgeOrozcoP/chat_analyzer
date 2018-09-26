@@ -17,8 +17,11 @@ def analyze_mult_chats(input_folder, output_folder):
             chat_df_single = create_chat_df(formatted_chat, chat_record[:-4])
 
             chat_df = chat_df.append(chat_df_single)
+            
+            
+    # chat_df.to_csv('to_analyze.csv', index=False)
 
-    processed_chat = chat_keywords(chat_df)
+    processed_chat, keyword_lists = chat_keywords(chat_df)
 
     # formato DF
 
@@ -29,14 +32,19 @@ def analyze_mult_chats(input_folder, output_folder):
 
     del processed_chat['mensaje']
 
-    #TODO: ordenar columnas
-    # processed_chat = processed_chat[['conversacion', 'fecha', 'hora', 'broker', 'mensaje_limpio']]
+    # Ordenar
+    first_columns = ['conversacion', 'fecha', 'hora', 'broker']
+    column_names = first_columns + keyword_lists + ['mensaje_limpio']
+    processed_chat = processed_chat[column_names]
 
     today = datetime.datetime.today().strftime('%d-%m-%Y')
 
     print('Guardando...')
-    processed_chat.to_csv(output_folder + '/' +'reporte_'+ today +'.csv', 
-                          index=False, sep='|', date_format='%d-%m-%Y')
+    
+    file_name = output_folder + '/' +'reporte_'+ today +'.csv'
+    processed_chat.to_csv(file_name, index=False, sep='|', date_format='%d-%m-%Y')
+    
+    add_sep_header(file_name)
 
 
 def analyze_chat(chat_record, output_folder):
@@ -44,7 +52,7 @@ def analyze_chat(chat_record, output_folder):
 
     chat_df = create_chat_df(formatted_chat, None)
 
-    processed_chat = chat_keywords(chat_df)
+    processed_chat, keyword_lists = chat_keywords(chat_df)
 
     # formato DF
     print('Ordenando resultados...')
@@ -53,14 +61,19 @@ def analyze_chat(chat_record, output_folder):
 
     del processed_chat['mensaje']
 
-    #TODO: ordenar columnas
-    # processed_chat = processed_chat[['fecha', 'hora', 'broker', 'mensaje_limpio']]
+    first_columns = ['fecha', 'hora', 'broker']
+    
+    column_names = first_columns + keyword_lists + ['mensaje_limpio']
+    
+    processed_chat = processed_chat[column_names]
 
     today = datetime.datetime.today().strftime('%d-%m-%Y')
 
     print('Guardando...')
-    processed_chat.to_csv(output_folder + '/' +'reporte_'+ chat_record[:-4] + '_' + today +'.csv',
-                          index=False, sep='|', date_format='%d-%m-%Y')
+    file_name = output_folder + '/' +'reporte_'+ chat_record[:-4] + '_' + today +'.csv'
+    processed_chat.to_csv(file_name,index=False, sep='|', date_format='%d-%m-%Y')
+    
+    add_sep_header(file_name)
 
 def leer_chat(chat_record):
     chat = []
@@ -99,13 +112,16 @@ def chat_keywords(df):
     df['mensaje_limpio'] = df['mensaje'].str.extract(':\s(.*)', expand=True)
     df.drop_duplicates('mensaje_limpio', inplace=True)
     # print(df.shape)
-
-    print('Buscando palabras clave...')
-    for lista in os.listdir('./listas'):
-        if lista.endswith('.txt'):
-            df[lista[:-4]]=df['mensaje_limpio'].str.extract(crear_regex('./listas/'+lista, '|'), expand=True, flags=re.IGNORECASE)
     
-    return df
+    conjunto_lista_keyword = []
+    
+    print('Buscando palabras clave...')
+    for lista_keyword in os.listdir('./listas'):
+        if lista_keyword.endswith('.txt'):
+            conjunto_lista_keyword.append(lista_keyword[:-4])
+            df[lista_keyword[:-4]]=df['mensaje_limpio'].str.extract(crear_regex('./listas/'+lista_keyword, '|'), expand=True, flags=re.IGNORECASE)
+    
+    return (df,conjunto_lista_keyword)
 
 
 def crear_regex(list_file, separador):
@@ -129,6 +145,9 @@ def crear_regex(list_file, separador):
     # print(my_regex)
 
     return my_regex
+
+def add_sep_header(file):
+    with open(file, "r+") as f: s = f.read(); f.seek(0); f.write("sep=|\n" + s)
 
             
 if __name__ == "__main__":
